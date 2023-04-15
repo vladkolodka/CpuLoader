@@ -35,18 +35,22 @@ var minsToWait =
 
 var threadsNum = (int) (Environment.ProcessorCount * threadsPercentage);
 
-Task.Factory.StartNew(_ => AppLifecycle(appCts.Token), appCts.Token, TaskCreationOptions.LongRunning);
+var appTask = Task.Factory.StartNew(_ => AppLifecycle(appCts.Token), appCts.Token, TaskCreationOptions.LongRunning);
 
 Console.WriteLine("Press any key to finish the process.");
 Console.WriteLine();
 
-Console.ReadKey();
-
-appCts.Cancel();
-Console.WriteLine("Stopping loader threads...");
-Thread.Sleep(500);
-
-
+if (!Environment.UserInteractive)
+{
+    Console.ReadKey();
+    appCts.Cancel();
+    Console.WriteLine("Stopping loader threads...");
+    Thread.Sleep(500);
+}
+else
+{
+    await appTask.Unwrap();
+}
 
 async Task AppLifecycle(CancellationToken appCancellationToken)
 {
